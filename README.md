@@ -1,6 +1,6 @@
 # OpenClaw Tools
 
-A collection of reusable skills and tools for [OpenClaw](https://github.com/anomalyco/opencode), an AI-powered CLI assistant for software engineering.
+A collection of reusable skills and tools for [OpenClaw](https://docs.openclaw.ai/), an AI-powered CLI assistant for software engineering.
 
 ## Overview
 
