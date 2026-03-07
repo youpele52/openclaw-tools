@@ -13,6 +13,13 @@ metadata: {"clawdbot":{"emoji":"📄","requires":{"bins":["uv"]}}}
 - `pandoc` is optional for `convert` because it can convert between many document formats when text-based conversion is possible.
 - `libreoffice` is an optional alternative to `pandoc` for `convert` because it can handle document conversions that `pandoc` may not support well.
 
+## File Access And Network Behavior
+- This skill operates on the file paths provided by the caller. It can read from and write to any host path the caller supplies; it is not limited to the OpenClaw workspace.
+- The `/root/.openclaw/workspace/...` paths in the command examples show where the skill entrypoint lives. They do not restrict which files the skill can access.
+- The `tts` command uses `edge-tts`, which sends the input text to an external text-to-speech service over the network to generate audio.
+- Do not use `tts` with sensitive or private text unless you are comfortable sending that text off-host.
+- All other commands run locally on the host, subject to the optional local binaries documented below.
+
 # Skill: PDF Toolkit
 
 ## When to use
