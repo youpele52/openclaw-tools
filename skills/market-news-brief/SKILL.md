@@ -1,100 +1,85 @@
 ---
-name: market-news-brief-pro
-description: Summarize broad market news and market tone using yfinance. No API key required.
+name: market-news-brief
+description: "Run a local script to fetch broad market news and tone. Use when: user asks about market conditions, macro news, what's happening in markets, or market sentiment for any region. Invoke by reading this SKILL.md then running: uv run /root/.openclaw/workspace/skills/market-news-brief/src/main.py <SCOPE>"
 homepage: https://finance.yahoo.com
 metadata: {"clawdbot":{"emoji":"📰","requires":{"bins":["uv"]}}}
 ---
 
 # Skill: Market News Brief
 
-
-## Prerequisites
-
-- `uv` is installed (the script will automatically handle dependency installation and execution)
-
-
 ## When to use
-- The user wants broad market headlines affecting the overall tape rather than a single company.
-- The user wants a quick macro and index-level news brief before reviewing individual stocks.
-- The user wants a compact market snapshot, top headlines, and dominant themes in one place.
-- The user wants either a global view by default or a country/region-specific market view.
+- The user wants to understand current market sentiment and news trends.
+- The user wants broad market news and macro tone for a region or country.
+- The user asks "what's happening in the market?" or "any market news today?"
+- The user asks about US markets, European markets, Asian markets, or global markets.
+- The user wants a news digest before making a trading or investment decision.
 
-## Step-by-step approach
-- If the user does not specify a market scope, assume `GLOBAL`.
-- If the user specifies a supported country or region, use that scope.
-- If the user passes a ticker with an obvious exchange suffix (for example, `NOV.DE`), infer the market scope from that suffix.
-- Use the `src/main.py` script to collect index snapshots and recent broad-market headlines from Yahoo Finance proxy tickers.
-- Treat this as a quick market brief. If the user needs deeper news coverage, cite that a dedicated news API may be more complete.
-- If Yahoo Finance has sparse news for the chosen scope, return the market snapshot and clearly note that headline coverage is limited.
+## When NOT to use
+- The user wants the current price of a specific stock → use `stock-price-checker-pro`
+- The user wants fundamentals (P/E, EPS, margins) for a company → use `stock-fundamentals`
+- The user wants a full equity research report → use `equity-research`
 
-## Usage Examples
+## ⚠️ Critical: Scope Words Only
 
-**Get the default global market brief:**
+This skill takes a **market scope word** as its argument — NOT a company ticker.
+Passing `AAPL`, `TSLA`, or any bare ticker symbol will cause an error.
+Always map the user's intent to a scope word from the table below.
+
+### Valid Scopes
+
+| Scope         | Coverage                                            |
+|---------------|-----------------------------------------------------|
+| `GLOBAL`      | All regions combined (default if nothing specified) |
+| `US`          | S&P 500, Nasdaq 100, Dow Jones, Russell 2000, VIX   |
+| `EUROPE`      | UK + Germany + Netherlands combined                 |
+| `UK`          | FTSE 100                                            |
+| `GERMANY`     | DAX                                                 |
+| `NETHERLANDS` | AEX / Euronext                                      |
+| `ASIA`        | Japan + South Korea combined                        |
+| `JAPAN`       | Nikkei 225                                          |
+| `SOUTH_KOREA` | KOSPI                                               |
+
+## Commands
+
+### Get broad market news
+
 ```bash
-uv run src/main.py
+uv run /root/.openclaw/workspace/skills/market-news-brief/src/main.py <SCOPE>
 ```
 
-**Explicitly request the global market brief:**
+### Examples
+
 ```bash
-uv run src/main.py GLOBAL
+# Global overview (default — use when no region is specified)
+uv run /root/.openclaw/workspace/skills/market-news-brief/src/main.py GLOBAL
+
+# US markets
+uv run /root/.openclaw/workspace/skills/market-news-brief/src/main.py US
+
+# European markets (covers UK, Germany, Netherlands)
+uv run /root/.openclaw/workspace/skills/market-news-brief/src/main.py EUROPE
+
+# Specific countries
+uv run /root/.openclaw/workspace/skills/market-news-brief/src/main.py GERMANY
+uv run /root/.openclaw/workspace/skills/market-news-brief/src/main.py UK
+uv run /root/.openclaw/workspace/skills/market-news-brief/src/main.py JAPAN
+
+# Asian markets
+uv run /root/.openclaw/workspace/skills/market-news-brief/src/main.py ASIA
 ```
 
-**Request a regional or country market brief:**
-```bash
-uv run src/main.py EUROPE
-uv run src/main.py GERMANY
-uv run src/main.py US
-```
+## Output
 
-**Infer the market from a suffixed ticker:**
-```bash
-uv run src/main.py NOV.DE
-uv run src/main.py SONY.T
-```
+The command returns a formatted summary including:
+- Index / ETF snapshot for the selected scope (price, change, % change)
+- Market tone assessment (risk-on / risk-off / neutral)
+- Dominant news themes (e.g. Central banks, Inflation, Tech, Energy, Geopolitics)
+- Top headlines with source, publish timestamp, and link
 
-## Output Format
+## Notes
 
-The script prints a human-readable market brief to stdout.
-
-### Example Output
-```text
-Market News Brief: US
-Market Tone: Mixed
-
-Market Snapshot:
-S&P 500 (SPY): $563.10 ▲$2.44 (0.44%)
-Nasdaq 100 (QQQ): $487.22 ▲$4.01 (0.83%)
-Dow Jones (DIA): $418.51 ▼$0.63 (-0.15%)
-Russell 2000 (IWM): $204.72 ▲$0.88 (0.43%)
-Volatility Index (^VIX): $14.30 ▼$0.41 (-2.79%)
-
-Dominant Themes:
-- Fed and rates (3 headlines)
-- Technology leadership (2 headlines)
-- Inflation and economy (2 headlines)
-
-Top Headlines:
-1. Stocks edge higher as investors parse fresh inflation data
-   Source: Reuters | Published: 2026-03-07 13:45:00 GMT
-   Link: https://example.com/story
-2. Treasury yields ease while megacap tech leads the Nasdaq
-   Source: Bloomberg | Published: 2026-03-07 14:10:00 GMT
-   Link: https://example.com/story-2
-```
-
-## Technical Notes
-- Uses the `yfinance` library to fetch market proxy quotes and related news from Yahoo Finance.
-- No API key required.
-- The Python implementation lives under `src/` and is split into `src/main.py`, `src/service.py`, `src/utils.py`, and `src/constants.py` to separate orchestration, scope logic, formatting helpers, and configuration.
-- The default behavior is a `GLOBAL` market brief built from configured country scopes.
-- Supported explicit scopes currently include `GLOBAL`, `EUROPE`, `ASIA`, `US`, `UK`, `GERMANY`, `NETHERLANDS`, `JAPAN`, and `SOUTH_KOREA`.
-- Obvious exchange suffixes can be used to infer a market scope (for example, `.DE`, `.L`, `.AS`, `.T`, `.KS`, `.KQ`).
-- Broad-market news is filtered with simple keyword rules to favor macro and market-wide headlines.
-- News availability can vary by ticker and by time of day.
-- Non-US headline coverage can be thinner than quote coverage, so the script may return coverage notes when Yahoo Finance news is sparse.
-
-## Troubleshooting
-- If headlines are sparse, Yahoo Finance may not have recent broad-market news available for the selected proxies. The script will still return the market snapshot and label coverage as limited.
-- If a requested market scope is unsupported, the script will return an error listing the supported scopes.
-- Bare tickers such as `AAPL` are not auto-mapped to markets. Use an explicit scope like `US`, or pass an exchange-suffixed ticker like `NOV.DE`.
-- If a quote metric shows as `N/A`, the data source did not provide that field at request time.
+- Uses `uv run` internally — no manual pip install or venv setup needed.
+- Do NOT pass a bare company ticker (e.g. `AAPL`) — it will error. Use scope words only.
+- For a user asking about a German stock like `RHM.DE`, use `EUROPE` or `GERMANY` for market context.
+- Do NOT use web search or curl to fetch market news — always use this script.
+- Do NOT use the `market-news.sh` wrapper — call `uv run src/main.py` directly as shown above.
