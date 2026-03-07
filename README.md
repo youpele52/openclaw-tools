@@ -10,11 +10,33 @@ This repository contains modular skills that extend OpenClaw's capabilities. Eac
 
 ```
 openclaw-tools/
-├── skills/                    # Reusable skills for OpenClaw
-│   └── stock-price-checker/   # Example skill: stock price lookup
-│       ├── SKILL.md           # Skill definition and usage guide
-│       ├── stock-price.py     # Python implementation
-│       └── stock-price.sh     # Shell wrapper
+├── skills/                        # Reusable skills for OpenClaw
+│   ├── stock-price-checker-pro/   # Stock price lookup
+│   │   ├── SKILL.md               # Skill definition and usage guide
+│   │   ├── stock-price.sh         # Shell wrapper
+│   │   └── src/                   # Python source files
+│   │       ├── main.py            # Orchestration entrypoint
+│   │       ├── service.py         # Data retrieval and formatting flow
+│   │       ├── utils.py           # Shared formatting helpers
+│   │       └── constants.py       # Skill configuration
+│   ├── stock-fundamentals/        # Company fundamentals analysis
+│   │   ├── SKILL.md
+│   │   ├── stock-fundamentals.sh
+│   │   └── src/
+│   │       ├── main.py
+│   │       ├── service.py
+│   │       ├── utils.py
+│   │       └── constants.py
+│   ├── market-news-brief/         # Broad market headlines and tone
+│   │   ├── SKILL.md
+│   │   ├── market-news.sh
+│   │   └── src/
+│   │       ├── main.py
+│   │       ├── service.py
+│   │       ├── utils.py
+│   │       └── constants.py
+│   └── equity-research/           # Orchestrator for the finance skills
+│       └── SKILL.md
 ```
 
 ## Available Skills
@@ -25,12 +47,45 @@ Check current stock prices using Yahoo Finance. No API key required.
 
 **Usage:**
 ```bash
-uv run stock-price.py AAPL
-uv run stock-price.py NVDA
-uv run stock-price.py VOO
+uv run skills/stock-price-checker-pro/src/main.py AAPL
+uv run skills/stock-price-checker-pro/src/main.py NVDA
+uv run skills/stock-price-checker-pro/src/main.py VOO
 ```
 
-See [`skills/stock-price-checker/SKILL.md`](skills/stock-price-checker/SKILL.md) for detailed documentation.
+See [`skills/stock-price-checker-pro/SKILL.md`](skills/stock-price-checker-pro/SKILL.md) for detailed documentation.
+
+### Stock Fundamentals
+
+Analyze company fundamentals such as valuation, margins, growth, balance-sheet strength, cash flow, dividend profile, and analyst context.
+
+**Usage:**
+```bash
+uv run skills/stock-fundamentals/src/main.py AAPL
+uv run skills/stock-fundamentals/src/main.py NVDA
+```
+
+See [`skills/stock-fundamentals/SKILL.md`](skills/stock-fundamentals/SKILL.md) for detailed documentation.
+
+### Market News Brief
+
+Summarize broad market headlines, market tone, and dominant macro themes using liquid market proxies.
+
+**Usage:**
+```bash
+uv run skills/market-news-brief/src/main.py
+uv run skills/market-news-brief/src/main.py GLOBAL
+uv run skills/market-news-brief/src/main.py EUROPE
+uv run skills/market-news-brief/src/main.py JAPAN
+uv run skills/market-news-brief/src/main.py NOV.DE
+```
+
+See [`skills/market-news-brief/SKILL.md`](skills/market-news-brief/SKILL.md) for detailed documentation.
+
+### Equity Research
+
+Orchestrate the finance skills for a fuller stock research workflow.
+
+Warning: [`skills/equity-research/SKILL.md`](skills/equity-research/SKILL.md) assumes `stock-price-checker`, `stock-fundamentals`, and `market-news-brief` are already installed. It is not intended to be used as the only installed finance skill.
 
 ## Adding New Skills
 
