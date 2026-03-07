@@ -13,25 +13,28 @@ openclaw-tools/
 ├── skills/                        # Reusable skills for OpenClaw
 │   ├── stock-price-checker-pro/   # Stock price lookup
 │   │   ├── SKILL.md               # Skill definition and usage guide
-│   │   ├── main.py                # Orchestration entrypoint
-│   │   ├── service.py             # Data retrieval and formatting flow
-│   │   ├── utils.py               # Shared formatting helpers
-│   │   ├── constants.py           # Skill configuration
-│   │   └── stock-price.sh         # Shell wrapper
+│   │   ├── stock-price.sh         # Shell wrapper
+│   │   └── src/                   # Python source files
+│   │       ├── main.py            # Orchestration entrypoint
+│   │       ├── service.py         # Data retrieval and formatting flow
+│   │       ├── utils.py           # Shared formatting helpers
+│   │       └── constants.py       # Skill configuration
 │   ├── stock-fundamentals/        # Company fundamentals analysis
 │   │   ├── SKILL.md
-│   │   ├── main.py
-│   │   ├── service.py
-│   │   ├── utils.py
-│   │   ├── constants.py
-│   │   └── stock-fundamentals.sh
+│   │   ├── stock-fundamentals.sh
+│   │   └── src/
+│   │       ├── main.py
+│   │       ├── service.py
+│   │       ├── utils.py
+│   │       └── constants.py
 │   ├── market-news-brief/         # Broad market headlines and tone
 │   │   ├── SKILL.md
-│   │   ├── main.py
-│   │   ├── service.py
-│   │   ├── utils.py
-│   │   ├── constants.py
-│   │   └── market-news.sh
+│   │   ├── market-news.sh
+│   │   └── src/
+│   │       ├── main.py
+│   │       ├── service.py
+│   │       ├── utils.py
+│   │       └── constants.py
 │   └── equity-research/           # Orchestrator for the finance skills
 │       └── SKILL.md
 ```
@@ -44,9 +47,9 @@ Check current stock prices using Yahoo Finance. No API key required.
 
 **Usage:**
 ```bash
-uv run skills/stock-price-checker-pro/main.py AAPL
-uv run skills/stock-price-checker-pro/main.py NVDA
-uv run skills/stock-price-checker-pro/main.py VOO
+uv run skills/stock-price-checker-pro/src/main.py AAPL
+uv run skills/stock-price-checker-pro/src/main.py NVDA
+uv run skills/stock-price-checker-pro/src/main.py VOO
 ```
 
 See [`skills/stock-price-checker-pro/SKILL.md`](skills/stock-price-checker-pro/SKILL.md) for detailed documentation.
@@ -57,8 +60,8 @@ Analyze company fundamentals such as valuation, margins, growth, balance-sheet s
 
 **Usage:**
 ```bash
-uv run skills/stock-fundamentals/main.py AAPL
-uv run skills/stock-fundamentals/main.py NVDA
+uv run skills/stock-fundamentals/src/main.py AAPL
+uv run skills/stock-fundamentals/src/main.py NVDA
 ```
 
 See [`skills/stock-fundamentals/SKILL.md`](skills/stock-fundamentals/SKILL.md) for detailed documentation.
@@ -69,11 +72,11 @@ Summarize broad market headlines, market tone, and dominant macro themes using l
 
 **Usage:**
 ```bash
-uv run skills/market-news-brief/main.py
-uv run skills/market-news-brief/main.py GLOBAL
-uv run skills/market-news-brief/main.py EUROPE
-uv run skills/market-news-brief/main.py JAPAN
-uv run skills/market-news-brief/main.py NOV.DE
+uv run skills/market-news-brief/src/main.py
+uv run skills/market-news-brief/src/main.py GLOBAL
+uv run skills/market-news-brief/src/main.py EUROPE
+uv run skills/market-news-brief/src/main.py JAPAN
+uv run skills/market-news-brief/src/main.py NOV.DE
 ```
 
 See [`skills/market-news-brief/SKILL.md`](skills/market-news-brief/SKILL.md) for detailed documentation.

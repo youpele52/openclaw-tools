@@ -20,25 +20,25 @@ metadata: {"clawdbot":{"emoji":"📈","requires":{"bins":["uv"]}}}
 ## Step-by-step approach
 - When given a company name, first locate the corresponding stock ticker symbol using Yahoo Finance or another reliable service.
 - If the user doesn't specify a currency, assume USD for stock prices. For stocks listed on other exchanges (e.g., German exchanges), use the appropriate ticker (e.g., `NOV.DE`) rather than converting currencies.
-- Once the ticker is identified, use the ticker as input to the `main.py` script. The script will fetch the current price and related information using the `yfinance` library (for example, `uv run main.py AAPL`).
+- Once the ticker is identified, use the ticker as input to the `src/main.py` script. The script will fetch the current price and related information using the `yfinance` library (for example, `uv run src/main.py AAPL`).
 
 ## Usage Examples
 
 **Check NVIDIA stock:**
 ```bash
-uv run main.py NVDA
+uv run src/main.py NVDA
 ```
 
 **Check VOO (S&P 500 ETF):**
 ```bash
-uv run main.py VOO
+uv run src/main.py VOO
 ```
 
 **Check any stock symbol:**
 ```bash
-uv run main.py TSLA
-uv run main.py MSFT
-uv run main.py AAPL
+uv run src/main.py TSLA
+uv run src/main.py MSFT
+uv run src/main.py AAPL
 ```
 
 ## Output Format
@@ -77,7 +77,7 @@ Upcoming Events:
 ## Technical Notes
 - Uses the `yfinance` library to fetch data from Yahoo Finance.
 - No API key required.
-- The Python implementation is split into `main.py`, `service.py`, `utils.py`, and `constants.py` to separate orchestration, data retrieval, formatting helpers, and configuration.
+- The Python implementation lives under `src/` and is split into `src/main.py`, `src/service.py`, `src/utils.py`, and `src/constants.py` to separate orchestration, data retrieval, formatting helpers, and configuration.
 - The script prints formatted text rather than JSON.
 - `market_cap`, `volume`, and `avg_volume` may be unavailable for some tickers depending on Yahoo Finance coverage.
 

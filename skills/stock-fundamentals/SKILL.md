@@ -20,26 +20,26 @@ metadata: {"clawdbot":{"emoji":"📊","requires":{"bins":["uv"]}}}
 
 ## Step-by-step approach
 - When given a company name, first locate the corresponding stock ticker symbol using Yahoo Finance or another reliable service.
-- Once the ticker is identified, use the ticker as input to the `main.py` script. The script will fetch fundamentals using the `yfinance` library (for example, `uv run main.py AAPL`).
+- Once the ticker is identified, use the ticker as input to the `src/main.py` script. The script will fetch fundamentals using the `yfinance` library (for example, `uv run src/main.py AAPL`).
 - Use the output as a factual financial snapshot, not as investment advice.
 
 ## Usage Examples
 
 **Analyze Apple fundamentals:**
 ```bash
-uv run main.py AAPL
+uv run src/main.py AAPL
 ```
 
 **Analyze Microsoft fundamentals:**
 ```bash
-uv run main.py MSFT
+uv run src/main.py MSFT
 ```
 
 **Analyze any supported stock symbol:**
 ```bash
-uv run main.py NVDA
-uv run main.py COST
-uv run main.py JPM
+uv run src/main.py NVDA
+uv run src/main.py COST
+uv run src/main.py JPM
 ```
 
 ## Output Format
@@ -98,7 +98,7 @@ Potential Watch Items:
 ## Technical Notes
 - Uses the `yfinance` library to fetch fundamentals from Yahoo Finance.
 - No API key required.
-- The Python implementation is split into `main.py`, `service.py`, `utils.py`, and `constants.py` to separate orchestration, metric extraction, formatting helpers, and configuration.
+- The Python implementation lives under `src/` and is split into `src/main.py`, `src/service.py`, `src/utils.py`, and `src/constants.py` to separate orchestration, metric extraction, formatting helpers, and configuration.
 - Many fields can be missing for ETFs, indices, ADRs, or thinly covered companies.
 - The script prefers Yahoo Finance quote metadata first, then falls back to statement data where possible.
 - The strengths-and-risks section is rule-based and intended as quick context only.

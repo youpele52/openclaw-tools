@@ -23,7 +23,7 @@ metadata: {"clawdbot":{"emoji":"📰","requires":{"bins":["uv"]}}}
 - If the user does not specify a market scope, assume `GLOBAL`.
 - If the user specifies a supported country or region, use that scope.
 - If the user passes a ticker with an obvious exchange suffix (for example, `NOV.DE`), infer the market scope from that suffix.
-- Use the `main.py` script to collect index snapshots and recent broad-market headlines from Yahoo Finance proxy tickers.
+- Use the `src/main.py` script to collect index snapshots and recent broad-market headlines from Yahoo Finance proxy tickers.
 - Treat this as a quick market brief. If the user needs deeper news coverage, cite that a dedicated news API may be more complete.
 - If Yahoo Finance has sparse news for the chosen scope, return the market snapshot and clearly note that headline coverage is limited.
 
@@ -31,25 +31,25 @@ metadata: {"clawdbot":{"emoji":"📰","requires":{"bins":["uv"]}}}
 
 **Get the default global market brief:**
 ```bash
-uv run main.py
+uv run src/main.py
 ```
 
 **Explicitly request the global market brief:**
 ```bash
-uv run main.py GLOBAL
+uv run src/main.py GLOBAL
 ```
 
 **Request a regional or country market brief:**
 ```bash
-uv run main.py EUROPE
-uv run main.py GERMANY
-uv run main.py US
+uv run src/main.py EUROPE
+uv run src/main.py GERMANY
+uv run src/main.py US
 ```
 
 **Infer the market from a suffixed ticker:**
 ```bash
-uv run main.py NOV.DE
-uv run main.py SONY.T
+uv run src/main.py NOV.DE
+uv run src/main.py SONY.T
 ```
 
 ## Output Format
@@ -85,7 +85,7 @@ Top Headlines:
 ## Technical Notes
 - Uses the `yfinance` library to fetch market proxy quotes and related news from Yahoo Finance.
 - No API key required.
-- The Python implementation is split into `main.py`, `service.py`, `utils.py`, and `constants.py` to separate orchestration, scope logic, formatting helpers, and configuration.
+- The Python implementation lives under `src/` and is split into `src/main.py`, `src/service.py`, `src/utils.py`, and `src/constants.py` to separate orchestration, scope logic, formatting helpers, and configuration.
 - The default behavior is a `GLOBAL` market brief built from configured country scopes.
 - Supported explicit scopes currently include `GLOBAL`, `EUROPE`, `ASIA`, `US`, `UK`, `GERMANY`, `NETHERLANDS`, `JAPAN`, and `SOUTH_KOREA`.
 - Obvious exchange suffixes can be used to infer a market scope (for example, `.DE`, `.L`, `.AS`, `.T`, `.KS`, `.KQ`).
