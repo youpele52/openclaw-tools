@@ -156,6 +156,13 @@ uv run /root/.openclaw/workspace/skills/pdf-toolkit/src/main.py tts --text "Welc
 uv run /root/.openclaw/workspace/skills/pdf-toolkit/src/main.py doctor
 ```
 
+## Chat Delivery
+- When this skill is used in a chat interface that supports file attachments, such as Telegram, any generated output file should be sent back to the user as an attachment after successful creation or conversion.
+- This applies to commands that create files, including `create-pdf`, `write-docx`, `extract-images`, `merge`, `split`, `rotate`, `tts`, and `convert`.
+- If a temporary output file is created in the Claw runtime temporary folder for delivery, delete that temporary file immediately after the file has been sent successfully to the user.
+- Do not delete files that were written to a user-requested destination outside the Claw temporary folder.
+- If the chat environment cannot send file attachments, report the output path clearly instead of claiming the file was delivered.
+
 ## Output
 - Plain text with labeled sections separated by blank lines.
 - Errors are prefixed with `Error:`.
