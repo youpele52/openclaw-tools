@@ -1,4 +1,5 @@
 from datetime import datetime
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError, available_timezones
 
 
 def format_timestamp_ms(ts_ms: int | None) -> str:
@@ -67,3 +68,100 @@ def parse_schedule_arg(schedule: str) -> tuple[str, str]:
         )
     kind, _, value = schedule.partition(":")
     return kind.strip().lower(), value.strip()
+
+
+def is_valid_iana_timezone(tz: str) -> bool:
+    """Return True if the given string is a valid IANA timezone identifier.
+
+    Uses zoneinfo.available_timezones() for a fast set lookup, with a
+    fallback ZoneInfo() construction to catch edge-cases not in the set.
+    """
+    if not tz or not isinstance(tz, str):
+        return False
+    if tz in available_timezones():
+        return True
+    try:
+        ZoneInfo(tz)
+        return True
+    except (ZoneInfoNotFoundError, KeyError):
+        return False
+
+
+def normalize_timezone(tz: str | None, fallback: str = "UTC") -> str:
+    """Return a validated IANA timezone string, falling back to UTC if invalid.
+
+    Strips whitespace and performs a case-insensitive best-effort match
+    for common aliases (e.g. 'london' -> 'Europe/London').
+    """
+    if not tz:
+        return fallback
+
+    tz = tz.strip()
+
+    if is_valid_iana_timezone(tz):
+        return tz
+
+    # Common short aliases that users or the AI might pass
+    _ALIASES: dict[str, str] = {
+        "utc": "UTC",
+        "gmt": "GMT",
+        "est": "America/New_York",
+        "cst": "America/Chicago",
+        "mst": "America/Denver",
+        "pst": "America/Los_Angeles",
+        "ist": "Asia/Kolkata",
+        "cet": "Europe/Paris",
+        "eet": "Europe/Helsinki",
+        "aest": "Australia/Sydney",
+        "jst": "Asia/Tokyo",
+        "london": "Europe/London",
+        "paris": "Europe/Paris",
+        "berlin": "Europe/Berlin",
+        "moscow": "Europe/Moscow",
+        "dubai": "Asia/Dubai",
+        "lagos": "Africa/Lagos",
+        "nairobi": "Africa/Nairobi",
+        "new york": "America/New_York",
+        "los angeles": "America/Los_Angeles",
+        "chicago": "America/Chicago",
+        "toronto": "America/Toronto",
+        "sydney": "Australia/Sydney",
+        "tokyo": "Asia/Tokyo",
+        "singapore": "Asia/Singapore",
+        "shanghai": "Asia/Shanghai",
+        "beijing": "Asia/Shanghai",
+        "mumbai": "Asia/Kolkata",
+        "karachi": "Asia/Karachi",
+        "jakarta": "Asia/Jakarta",
+        "cairo": "Africa/Cairo",
+        "johannesburg": "Africa/Johannesburg",
+        "sao paulo": "America/Sao_Paulo",
+        "mexico city": "America/Mexico_City",
+    }
+
+    resolved = _ALIASES.get(tz.lower())
+    if resolved:
+        return resolved
+
+    return fallback
+
+
+def format_timezone_label(tz: str) -> str:
+    """Return a display-friendly label for a timezone, including current UTC offset.
+
+    Example: 'Europe/Lagos' -> 'Africa/Lagos (UTC+1)'
+    """
+    try:
+        now = datetime.now(tz=ZoneInfo(tz))
+        offset = now.utcoffset()
+        if offset is None:
+            return tz
+        total_minutes = int(offset.total_seconds() // 60)
+        sign = "+" if total_minutes >= 0 else "-"
+        hours, mins = divmod(abs(total_minutes), 60)
+        offset_str = (
+            f"UTC{sign}{hours}" if mins == 0 else f"UTC{sign}{hours}:{mins:02d}"
+        )
+        return f"{tz} ({offset_str})"
+    except Exception:
+        return tz

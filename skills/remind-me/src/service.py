@@ -9,6 +9,8 @@ from constants import (
     SCHEDULE_KIND_AT,
     SCHEDULE_KIND_CRON,
     SCHEDULE_KIND_EVERY,
+    TZ_DEFAULT,
+    TZ_UNKNOWN,
     VALID_SCHEDULE_KINDS,
 )
 from utils import (
@@ -16,6 +18,8 @@ from utils import (
     format_schedule,
     format_status_icon,
     format_timestamp_ms,
+    format_timezone_label,
+    normalize_timezone,
     parse_schedule_arg,
 )
 
@@ -60,8 +64,14 @@ def create_reminder(
     channel: str,
     to: str,
     once: bool = False,
+    timezone: str | None = None,
 ) -> str:
     """Create a new cron reminder scoped to the given channel and chat ID.
+
+    Accepts an optional IANA timezone string. If provided (and valid), it is
+    passed as --tz to openclaw cron add so that cron expressions are evaluated
+    in the user's local time rather than UTC. Falls back to UTC if omitted or
+    invalid.
 
     Returns a formatted plain-text confirmation or error string.
     """
@@ -86,8 +96,15 @@ def create_reminder(
         if AT_IS_ALWAYS_ONCE:
             once = True
 
+    # Resolve timezone — normalize handles aliases and falls back to UTC
+    resolved_tz = TZ_DEFAULT
+    if timezone and timezone.lower() != TZ_UNKNOWN:
+        resolved_tz = normalize_timezone(timezone, fallback=TZ_DEFAULT)
+
     tag = build_channel_tag(channel, to)
-    description = f"remind-me skill | channel:{channel} | to:{to} | {tag}"
+    description = (
+        f"remind-me skill | channel:{channel} | to:{to} | tz:{resolved_tz} | {tag}"
+    )
 
     cmd = [
         OPENCLAW_BIN,
@@ -104,6 +121,8 @@ def create_reminder(
         "--to",
         to,
         "--announce",
+        "--tz",
+        resolved_tz,
         *schedule_flags,
     ]
 
@@ -120,10 +139,12 @@ def create_reminder(
         sched_str = format_schedule(job.get("schedule", {}))
         job_id = job.get("id", "unknown")
         once_label = " (one-time)" if once else " (recurring)"
+        tz_label = format_timezone_label(resolved_tz)
         return (
             f"✅ Reminder set!\n"
             f"Name:     {name}\n"
             f"Schedule: {sched_str}{once_label}\n"
+            f"Timezone: {tz_label}\n"
             f"Message:  {message}\n"
             f"Channel:  {channel} → {to}\n"
             f"ID:       {job_id}"
@@ -164,9 +185,20 @@ def list_reminders(channel: str, to: str) -> str:
         status_icon = format_status_icon(last_status)
         paused_label = " ⏸ (disabled)" if not enabled else ""
 
+        # Extract timezone from the description tag if present
+        desc = job.get("description") or ""
+        tz_label = ""
+        for part in desc.split("|"):
+            part = part.strip()
+            if part.startswith("tz:"):
+                raw_tz = part[3:].strip()
+                if raw_tz and raw_tz != TZ_DEFAULT:
+                    tz_label = f"\n   Timezone: {format_timezone_label(raw_tz)}"
+                break
+
         lines.append(
             f"{i}. {status_icon} {name}{paused_label}\n"
-            f"   Schedule: {sched}\n"
+            f"   Schedule: {sched}{tz_label}\n"
             f"   Message:  {msg}\n"
             f"   Next run: {next_run}\n"
             f"   ID: {job.get('id', 'N/A')}"
@@ -231,9 +263,10 @@ def format_create_output(
     channel: str,
     to: str,
     once: bool,
+    timezone: str | None = None,
 ) -> str:
     """Dispatch to create_reminder and return its formatted plain-text output."""
-    return create_reminder(name, message, schedule, channel, to, once)
+    return create_reminder(name, message, schedule, channel, to, once, timezone)
 
 
 def format_list_output(channel: str, to: str) -> str:

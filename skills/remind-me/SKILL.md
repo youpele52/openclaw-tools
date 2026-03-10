@@ -1,6 +1,6 @@
 ---
 name: remind-me
-description: "Create, list, and cancel reminders and cron jobs scoped to the channel they were requested from. Use when: user says 'remind me', 'set an alarm', 'schedule a cron', 'alert me when', 'every day at X do Y', 'cancel my reminder', 'list my reminders'. Auto-detects source channel and delivers back to it. Asks for clarification if schedule or intent is ambiguous before creating anything."
+description: "Create, list, and cancel reminders and cron jobs scoped to the channel they were requested from. Use when: user says 'remind me', 'set an alarm', 'schedule a cron', 'alert me when', 'every day at X do Y', 'cancel my reminder', 'list my reminders'. Auto-detects source channel, chat ID, and user timezone. Delivers back to originating chat. Asks for clarification if schedule or intent is ambiguous before creating anything."
 metadata: {"clawdbot":{"emoji":"⏰","requires":{"bins":["uv","openclaw"]}}}
 ---
 
@@ -21,15 +21,16 @@ metadata: {"clawdbot":{"emoji":"⏰","requires":{"bins":["uv","openclaw"]}}}
 
 ---
 
-## ⚠️ CRITICAL: Always resolve these THREE things before creating a reminder
+## ⚠️ CRITICAL: Always resolve these FOUR things before creating a reminder
 
-Before calling the script, you MUST have all three resolved:
+Before calling the script, you MUST have all four resolved:
 
 | Field | Question to answer | Example |
 |---|---|---|
 | **WHAT** | What should happen / be said? | "Check NVDA stock price" |
 | **WHEN / HOW OFTEN** | One-time or recurring? At what time/interval? | "Every Monday at 9 AM" |
 | **WHERE** | Which channel + chat ID to deliver to? | Auto-detected from session |
+| **TIMEZONE** | What timezone should times be interpreted in? | Auto-detected from USER.md |
 
 ### Missing field rules
 
@@ -37,13 +38,15 @@ Before calling the script, you MUST have all three resolved:
 - **WHEN is missing AND cannot be reasonably assumed** → Ask: "How often, or at what time?"
 - **WHEN is missing BUT can be reasonably assumed as once** → Assume one-shot, but confirm: "Just once, right?"
 - **WHERE is always auto-detected** → Never ask the user for this. Read it from session context (see below).
+- **TIMEZONE is always auto-detected** → Never ask unless unresolvable (see Step 2 below).
 
-### Do NOT create the job until all three are confirmed.
+### Do NOT create the job until all four are confirmed.
 
 ---
 
-## Step 1 — Auto-detect channel and chat ID from session context
+## Step 1 — Auto-detect channel, chat ID, and timezone from context
 
+### Channel and chat ID
 The source channel and chat ID are available in your session context. Extract them before doing anything else.
 
 - **channel**: the platform the message arrived on (e.g. `telegram`, `discord`)
@@ -52,6 +55,23 @@ The source channel and chat ID are available in your session context. Extract th
 These two values are passed as `--channel` and `--to` to the script.
 **Never ask the user for these. Never hardcode them. Always read from session context.**
 
+### Timezone — 3-tier resolution (in priority order)
+
+Resolve the user's timezone using this exact priority chain:
+
+| Priority | Source | How to read it |
+|---|---|---|
+| 1 | **Message itself** | User says "at 9 AM London time" or "remind me at 3 PM EST" → extract from their words |
+| 2 | **`USER.md`** | Read the `Timezone:` field from `/root/.openclaw/workspace/USER.md` |
+| 3 | **Ask the user** | Only if tiers 1 and 2 both fail — ask once, then offer to save it |
+
+**Rules:**
+- If tier 1 applies → use it directly, no need to check USER.md
+- If tier 2 applies → use it silently, do not mention it to the user
+- If tier 3 triggers → ask: _"What timezone are you in? (e.g. London, New York, Lagos)"_ — then offer: _"Want me to remember your timezone for future reminders?"_ If they say yes, update `USER.md`
+- The resolved timezone is passed as `tz:<IANA>` to the script
+- If no timezone can be resolved at all, pass `tz:UTC` and mention it in the confirmation summary
+
 ---
 
 ## Step 2 — Parse the user's intent
@@ -59,7 +79,9 @@ These two values are passed as `--channel` and `--to` to the script.
 From the user's natural language request, extract:
 
 ### Schedule type
-Map what the user said to one of three prefixed schedule strings:
+Map what the user said to one of three prefixed schedule strings.
+
+> ⚠️ When the user states a clock time (e.g. "9 AM", "3 PM", "noon"), always interpret it in their resolved timezone (from Step 1), not UTC. The `--tz` flag passed to the script ensures cron expressions fire at the correct local time.
 
 | What user said | Schedule string to pass |
 |---|---|
@@ -117,9 +139,13 @@ Before calling the script, summarise what you're about to set up and get a quick
 > "Got it! Here's what I'll set up:
 > ⏰ **Reminder:** Check NVDA stock price
 > 🔁 **Schedule:** Every Monday at 9 AM
+> 🌍 **Timezone:** Africa/Lagos (UTC+1)
 > 📱 **Delivered to:** This chat
 >
 > Shall I go ahead?"
+
+Always include the **Timezone** line in the confirmation summary. If falling back to UTC because none was found, say so clearly:
+> 🌍 **Timezone:** UTC (no timezone found — times will be in UTC)
 
 Only proceed after user confirms.
 
@@ -136,8 +162,14 @@ uv run /root/.openclaw/workspace/skills/remind-me/src/main.py create \
   "<every:duration | cron:expr | at:duration>" \
   "<channel>" \
   "<chatId>" \
-  [once]
+  [once] \
+  [tz:<IANA timezone>]
 ```
+
+- `tz:` is optional but **always include it** when a timezone was resolved (tiers 1–2)
+- Pass `tz:UTC` explicitly when falling back — makes the stored description accurate
+- Examples: `tz:Africa/Lagos`, `tz:America/New_York`, `tz:Europe/London`, `tz:Asia/Kolkata`
+- Common short names are accepted: `tz:EST`, `tz:IST`, `tz:CET`, `tz:Lagos`, `tz:London`
 
 ### List reminders for this chat
 
@@ -168,9 +200,10 @@ uv run /root/.openclaw/workspace/skills/remind-me/src/main.py cancel id "<job id
 **User:** "Remind me every Monday at 9 AM to check NVDA"
 
 1. Detect: channel=telegram, to=<chatId>
-2. Parse: WHAT="Check NVDA stock price", WHEN=cron:0 9 * * 1, one-shot=false
-3. Confirm with user
-4. Run:
+2. Read USER.md → Timezone: Africa/Lagos → resolves to `Africa/Lagos`
+3. Parse: WHAT="Check NVDA stock price", WHEN=cron:0 9 * * 1, one-shot=false
+4. Confirm with user (include timezone line)
+5. Run:
 
 ```bash
 uv run /root/.openclaw/workspace/skills/remind-me/src/main.py create \
@@ -178,7 +211,8 @@ uv run /root/.openclaw/workspace/skills/remind-me/src/main.py create \
   "Check the current NVDA stock price and send me a summary." \
   "cron:0 9 * * 1" \
   "telegram" \
-  "<chatId>"
+  "<chatId>" \
+  "tz:Africa/Lagos"
 ```
 
 ---
@@ -188,11 +222,12 @@ uv run /root/.openclaw/workspace/skills/remind-me/src/main.py create \
 **User:** "Remind me to go do groceries by 12 PM"
 
 1. Detect: channel=telegram, to=<chatId>
-2. Parse: WHAT="Do groceries", WHEN=12 PM but frequency unclear
-3. Ask: "Just to confirm — is this a one-time reminder for today at noon, or should I remind you every day at 12 PM?"
-4. User says: "Just today"
-5. Compute duration from now to today's noon → e.g. `at:3h30m`
-6. Confirm, then run:
+2. Read USER.md → Timezone: Africa/Lagos → resolves to `Africa/Lagos`
+3. Parse: WHAT="Do groceries", WHEN=12 PM but frequency unclear
+4. Ask: "Just to confirm — is this a one-time reminder for today at noon, or should I remind you every day at 12 PM?"
+5. User says: "Just today"
+6. Compute duration from now to today's noon **in Africa/Lagos time** → e.g. `at:3h30m`
+7. Confirm (include timezone line), then run:
 
 ```bash
 uv run /root/.openclaw/workspace/skills/remind-me/src/main.py create \
@@ -201,7 +236,8 @@ uv run /root/.openclaw/workspace/skills/remind-me/src/main.py create \
   "at:3h30m" \
   "telegram" \
   "<chatId>" \
-  once
+  once \
+  "tz:Africa/Lagos"
 ```
 
 ---
@@ -222,10 +258,12 @@ Format the output as a readable list, not raw JSON. Example response:
 >
 > 1. **NVDA Check - Monday 9AM** 🔁 Every Monday at 9 AM
 >    _"Check the current NVDA stock price..."_
+>    🌍 Timezone: Africa/Lagos (UTC+1)
 >    Next run: Mon 10 Mar 2026, 09:00
 >
 > 2. **Groceries - Noon** (one-time)
 >    _"Time to go do groceries!"_
+>    🌍 Timezone: Africa/Lagos (UTC+1)
 >    Runs in: 3h 30m
 
 ---
@@ -250,13 +288,65 @@ uv run /root/.openclaw/workspace/skills/remind-me/src/main.py cancel name "NVDA 
 
 **User:** "In 30 seconds send me a love letter"
 
+> `at:` schedules are duration-based (relative to now), so timezone does not affect when they fire.
+> Still pass `tz:` so it is stored in the job description for consistency.
+
 ```bash
 uv run /root/.openclaw/workspace/skills/remind-me/src/main.py create \
   "Love Letter - 30s" \
   "Write a beautiful, heartfelt love letter. Make it romantic and touching." \
   "at:30s" \
   "telegram" \
-  "<chatId>"
+  "<chatId>" \
+  "tz:Africa/Lagos"
+```
+
+---
+
+### Example 6 — Timezone in message, no USER.md entry
+
+**User:** "Remind me every day at 8 AM New York time to drink water"
+
+1. Detect: channel=telegram, to=<chatId>
+2. Tier 1 hit: "New York time" → resolves to `America/New_York` — no need to check USER.md
+3. Parse: WHAT="Drink water", WHEN=cron:0 8 * * *, one-shot=false
+4. Confirm with user
+5. Run:
+
+```bash
+uv run /root/.openclaw/workspace/skills/remind-me/src/main.py create \
+  "Drink Water - 8AM NY" \
+  "Reminder: Time to drink water! 💧" \
+  "cron:0 8 * * *" \
+  "telegram" \
+  "<chatId>" \
+  "tz:America/New_York"
+```
+
+---
+
+### Example 7 — No timezone anywhere, ask user
+
+**User:** "Remind me every day at 7 AM to exercise"
+
+1. Detect: channel=telegram, to=<chatId>
+2. Tier 1: no timezone in message
+3. Tier 2: USER.md Timezone field is empty
+4. Tier 3: Ask — _"What timezone are you in? (e.g. London, Lagos, New York)"_
+5. User says: "Lagos"
+6. Resolve: `Africa/Lagos`
+7. Offer: _"Want me to remember Lagos time for future reminders?"_
+8. If yes → update USER.md: `Timezone: Africa/Lagos`
+9. Confirm, then run:
+
+```bash
+uv run /root/.openclaw/workspace/skills/remind-me/src/main.py create \
+  "Exercise - 7AM" \
+  "Reminder: Time to exercise! 💪" \
+  "cron:0 7 * * *" \
+  "telegram" \
+  "<chatId>" \
+  "tz:Africa/Lagos"
 ```
 
 ---
