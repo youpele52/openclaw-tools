@@ -11,6 +11,13 @@ This repository contains modular skills that extend OpenClaw's capabilities. Eac
 ```
 openclaw-tools/
 ├── skills/                        # Reusable skills for OpenClaw
+│   ├── economic-calendar/         # TradingEconomics calendar events
+│   │   ├── SKILL.md               # Skill definition and usage guide
+│   │   ├── economic-calendar.sh   # Shell wrapper
+│   │   └── src/                   # Python source files
+│   │       ├── main.py            # Orchestration entrypoint
+│   │       ├── service.py         # Data retrieval and formatting flow
+│   │       └── utils.py           # Shared parsing and env helpers
 │   ├── stock-price-checker-pro/   # Stock price lookup
 │   │   ├── SKILL.md               # Skill definition and usage guide
 │   │   ├── stock-price.sh         # Shell wrapper
@@ -40,6 +47,21 @@ openclaw-tools/
 ```
 
 ## Available Skills
+
+### Economic Calendar
+
+Fetch economic calendar events for 7 days inclusive from the query day, or for an explicit date range.
+
+**Usage:**
+```bash
+uv run skills/economic-calendar/src/main.py
+uv run skills/economic-calendar/src/main.py 2026-03-10
+uv run skills/economic-calendar/src/main.py 2026-03-10 2026-03-24
+```
+
+Set `TRADING_ECONOMICS_API_KEY=client:secret` for TradingEconomics data, or copy `.env.example` to `.env`. If no key is present, the skill falls back to Yahoo Finance.
+
+See [`skills/economic-calendar/SKILL.md`](skills/economic-calendar/SKILL.md) for detailed documentation.
 
 ### Stock Price Checker
 
