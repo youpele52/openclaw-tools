@@ -109,6 +109,20 @@ Orchestrate the finance skills for a fuller stock research workflow.
 
 Warning: [`skills/equity-research/SKILL.md`](skills/equity-research/SKILL.md) assumes `stock-price-checker`, `stock-fundamentals`, and `market-news-brief` are already installed. It is not intended to be used as the only installed finance skill.
 
+### Website Scraper Pro
+
+Scrape a single page into clean markdown by default, optionally use JS-aware rendering, and optionally narrow the returned content with deterministic query-focused filtering. No AI model configuration is used in this v1.
+
+**Usage:**
+```bash
+uv run skills/website-scraper-pro/src/main.py https://example.com
+uv run skills/website-scraper-pro/src/main.py https://example.com --js
+uv run skills/website-scraper-pro/src/main.py https://example.com --query "documentation examples"
+uv run skills/website-scraper-pro/src/main.py https://example.com --format json
+```
+
+See [`skills/website-scraper-pro/SKILL.md`](skills/website-scraper-pro/SKILL.md) for detailed documentation.
+
 ## Adding New Skills
 
 To add a new skill:
