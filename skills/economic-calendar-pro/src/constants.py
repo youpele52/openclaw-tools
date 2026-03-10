@@ -14,4 +14,4 @@ YAHOO_REGION = "US"
 API_KEY_ENV_VAR = "TRADING_ECONOMICS_API_KEY"
 YAHOO_FALLBACK_AUTH_SOURCE = "Yahoo Finance fallback"
 
-USER_AGENT = "openclaw-tools-economic-calendar/0.1"
+USER_AGENT = "openclaw-tools-economic-calendar-pro/0.1"

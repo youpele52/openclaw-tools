@@ -1,5 +1,5 @@
 ---
-name: economic-calendar
+name: economic-calendar-pro
 description: "Run a local script to fetch economic calendar events for a date range. Defaults to 7 days inclusive from the query day. Uses TradingEconomics when TRADING_ECONOMICS_API_KEY is present and falls back to Yahoo Finance otherwise."
 homepage: https://docs.tradingeconomics.com/economic_calendar/snapshot/
 metadata: {"clawdbot":{"emoji":"🗓️","requires":{"bins":["uv"]}}}
@@ -30,7 +30,7 @@ metadata: {"clawdbot":{"emoji":"🗓️","requires":{"bins":["uv"]}}}
 ### Get the default calendar window
 
 ```bash
-uv run /root/.openclaw/workspace/skills/economic-calendar/src/main.py
+uv run /root/.openclaw/workspace/skills/economic-calendar-pro/src/main.py
 ```
 
 Defaults to 7 days inclusive from the query day.
@@ -38,7 +38,7 @@ Defaults to 7 days inclusive from the query day.
 ### Get a custom calendar window
 
 ```bash
-uv run /root/.openclaw/workspace/skills/economic-calendar/src/main.py <START_DATE> <END_DATE>
+uv run /root/.openclaw/workspace/skills/economic-calendar-pro/src/main.py <START_DATE> <END_DATE>
 ```
 
 Dates must use `YYYY-MM-DD`.
@@ -47,13 +47,13 @@ Dates must use `YYYY-MM-DD`.
 
 ```bash
 # Default window: query day plus the next 6 days
-uv run /root/.openclaw/workspace/skills/economic-calendar/src/main.py
+uv run /root/.openclaw/workspace/skills/economic-calendar-pro/src/main.py
 
 # Start from a specific day and use 7 days inclusive
-uv run /root/.openclaw/workspace/skills/economic-calendar/src/main.py 2026-03-10
+uv run /root/.openclaw/workspace/skills/economic-calendar-pro/src/main.py 2026-03-10
 
 # Explicit date range
-uv run /root/.openclaw/workspace/skills/economic-calendar/src/main.py 2026-03-10 2026-03-24
+uv run /root/.openclaw/workspace/skills/economic-calendar-pro/src/main.py 2026-03-10 2026-03-24
 ```
 
 ## Output
@@ -70,5 +70,5 @@ The command returns:
 - The script reads `TRADING_ECONOMICS_API_KEY` from the environment first.
 - If no env var is set, it also checks a repo-root `.env` file before falling back to Yahoo Finance.
 - Yahoo fallback is better than guest TradingEconomics for current/future windows, but it does not expose the same richness of metadata.
-- Do NOT use the `economic-calendar.sh` wrapper in normal skill execution - call `uv run src/main.py` directly as shown above.
+- Do NOT use the `economic-calendar-pro.sh` wrapper in normal skill execution - call `uv run src/main.py` directly as shown above.
 - Do NOT use web search for this workflow - use the script so the output is date-filtered and formatted consistently.

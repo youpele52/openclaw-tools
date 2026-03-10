@@ -32,11 +32,11 @@ def resolve_date_range(args: list[str]) -> tuple[date, date]:
         return start_date, end_date
 
     raise ValueError(
-        "Usage: economic-calendar [START_DATE] [END_DATE]\n"
+        "Usage: economic-calendar-pro [START_DATE] [END_DATE]\n"
         "Examples:\n"
-        "  economic-calendar\n"
-        "  economic-calendar 2026-03-10\n"
-        "  economic-calendar 2026-03-10 2026-03-24"
+        "  economic-calendar-pro\n"
+        "  economic-calendar-pro 2026-03-10\n"
+        "  economic-calendar-pro 2026-03-10 2026-03-24"
     )
 
 
